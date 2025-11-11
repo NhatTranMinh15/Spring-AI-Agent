@@ -1,6 +1,7 @@
 package com.agent_java.authorization_server.config;
 
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,7 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 @Configuration
 public class RegisteredClientConfig {
 
-    PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    private PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
 
     @Bean
     public CommandLineRunner clientInitializer(RegisteredClientRepository registeredClientRepository) {

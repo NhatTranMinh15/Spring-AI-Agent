@@ -1,5 +1,6 @@
 package com.agent_java.authorization_server.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -13,6 +14,7 @@ import org.springframework.security.oauth2.server.authorization.JdbcOAuth2Author
 @Configuration
 public class AuthorizationPersistenceConfig {
 
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Bean
@@ -25,6 +27,7 @@ public class AuthorizationPersistenceConfig {
         return new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
     }
 
+    @Bean
     public OAuth2AuthorizationConsentService authorizationConsentService(RegisteredClientRepository registeredClientRepository) {
         return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
     }

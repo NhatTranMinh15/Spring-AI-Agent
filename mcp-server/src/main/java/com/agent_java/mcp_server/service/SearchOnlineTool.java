@@ -12,17 +12,19 @@ import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+@Service
 public class SearchOnlineTool {
-
+    
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-
+    
     @Autowired
     public SearchOnlineTool(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
@@ -30,7 +32,7 @@ public class SearchOnlineTool {
     }
     
     private final Logger logger = LoggerFactory.getLogger(SearchOnlineTool.class);
-
+    
     @Value("${google.api.key}")
     private String apiKey;
     @Value("${google.search.engine.id}")
@@ -39,13 +41,14 @@ public class SearchOnlineTool {
     private String endpoint;
     @Value("${google.search.sort}")
     private String sortParam;
-
+    
     @Tool(description = """
         Search the web for up-to-date information.
         ALWAYS use this tool when the user asks about current events, real-time data, or information like prices, weather, news, etc.
     """
     )
     public ToolResponseMessage.ToolResponse searchOnline(String query) {
+        logger.debug("searchOnline tool called");
         var resultToolName = "Result of searchOnline tool";
         var results = callGoogleSearchAPI(query);
         if (results.isEmpty()) {
@@ -72,7 +75,7 @@ public class SearchOnlineTool {
                 formattedAnswer
         );
     }
-
+    
     public List<GoogleSearchResponseVm> callGoogleSearchAPI(String query) {
         var builder = UriComponentsBuilder
                 .fromUriString(endpoint)

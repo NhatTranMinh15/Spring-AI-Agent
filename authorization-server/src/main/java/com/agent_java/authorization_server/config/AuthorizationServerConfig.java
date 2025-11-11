@@ -26,7 +26,6 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -44,16 +43,17 @@ public class AuthorizationServerConfig {
     @Order(1) // Run this filter chain first
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         var authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
-        RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
+        var endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
         http.securityMatcher(endpointsMatcher)
-                .authorizeHttpRequests((auth) -> {
-                    auth.requestMatchers(
-                            "/.well-known/oauth-authorization-server",
-                            "/.well-known/openid-configuration"
-                    ).permitAll()
-                            .anyRequest().authenticated();
-                });
-        http.csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher));
+                .authorizeHttpRequests(auth
+                        -> auth.requestMatchers(
+                        "/.well-known/oauth-authorization-server",
+                        "/.well-known/openid-configuration"
+                ).permitAll()
+                        .anyRequest().authenticated()
+                );
+        http.csrf(csrf -> csrf.disable());
+//        http.csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher));
         http.with(authorizationServerConfigurer, Customizer.withDefaults());
         http.exceptionHandling((exceptions) -> {
             exceptions.defaultAuthenticationEntryPointFor(new BearerTokenAuthenticationEntryPoint(), (request) -> "/userinfo".equals(request.getRequestURL().toString()));

@@ -9,8 +9,10 @@ import com.agent_java.orchestrator.viewmodel.RoleRequestVm;
 import com.agent_java.orchestrator.viewmodel.RoleResponseVm;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Service
 public class RoleService {
 
     private RoleRepository roleRepository;

@@ -3,6 +3,7 @@ package com.agent_java.authorization_server.config;
 import com.agent_java.authorization_server.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+@Configuration
 public class SecurityConfig {
 
     @Autowired
@@ -22,15 +24,22 @@ public class SecurityConfig {
     @Bean
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/**");
-        http.authorizeHttpRequests((auth) -> auth.anyRequest().authenticated());
-        http.formLogin(Customizer.withDefaults());
-        return http.build();
+        return http
+                .securityMatcher("/**")
+                .authorizeHttpRequests(auth
+                        -> auth.anyRequest().authenticated()
+                )
+                .formLogin(Customizer.withDefaults())
+                .build();
     }
 
+    @Bean
     public UserDetailsService userDetailsService() {
         return (String username) -> {
-            var user = userRepository.findById(username).orElseThrow(() -> new UsernameNotFoundException("User not found: $username"));
+            var user = userRepository
+                    .findById(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+            
             UserDetails u = User
                     .withUsername(user.getUsername())
                     .password(user.getPassword()) // must already be encoded with BCrypt
@@ -41,6 +50,7 @@ public class SecurityConfig {
         };
     }
 
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }

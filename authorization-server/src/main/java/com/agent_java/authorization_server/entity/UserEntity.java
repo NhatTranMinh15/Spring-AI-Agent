@@ -26,7 +26,7 @@ public class UserEntity {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "authorities",
-            joinColumns = @JoinColumn(name = "username")
+            joinColumns = {@JoinColumn(name = "username")}
     )
     @Column(name = "authority")
     private Set<String> roles = Set.of("ROLE_USER");
