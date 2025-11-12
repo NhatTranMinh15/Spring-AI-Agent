@@ -34,10 +34,14 @@ import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Collection;
+import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 @EnableWebSecurity
 public class AuthorizationServerConfig {
+
+    @Value("jwt.issuer")
+    private String issuer;
 
     @Bean
     @Order(1) // Run this filter chain first
@@ -69,7 +73,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().build();
+        return AuthorizationServerSettings.builder().issuer(issuer).build();
     }
 
     @Bean
