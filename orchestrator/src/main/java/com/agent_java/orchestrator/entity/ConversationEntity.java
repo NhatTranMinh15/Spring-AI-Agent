@@ -18,16 +18,19 @@ import lombok.EqualsAndHashCode;
 public class ConversationEntity extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
-     String title;
+    String title;
     String username;
     @Column(name = "is_active")
     boolean isActive = true;
     @OneToMany(mappedBy = "conversation", fetch = FetchType.LAZY, cascade = {CascadeType.ALL}, orphanRemoval = true)
     List<ChatMessageEntity> messages = new ArrayList<>();
 
+    public ConversationEntity() {
+    }
+
     public ConversationEntity(String title, String username) {
         this.title = title;
         this.username = username;
     }
-    
+
 }

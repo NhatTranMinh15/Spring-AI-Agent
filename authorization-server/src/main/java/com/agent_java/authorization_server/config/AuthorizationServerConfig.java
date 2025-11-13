@@ -34,13 +34,14 @@ import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Collection;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 @EnableWebSecurity
 public class AuthorizationServerConfig {
 
-    @Value("jwt.issuer")
+    @Value("${jwt.issuer}")
     private String issuer;
 
     @Bean
@@ -56,8 +57,7 @@ public class AuthorizationServerConfig {
                 ).permitAll()
                         .anyRequest().authenticated()
                 );
-        http.csrf(csrf -> csrf.disable());
-//        http.csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher));
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher));
         http.with(authorizationServerConfigurer, Customizer.withDefaults());
         http.exceptionHandling((exceptions) -> {
             exceptions.defaultAuthenticationEntryPointFor(new BearerTokenAuthenticationEntryPoint(), (request) -> "/userinfo".equals(request.getRequestURL().toString()));
@@ -101,11 +101,16 @@ public class AuthorizationServerConfig {
         return (JwtEncodingContext context) -> {
             Authentication principal = context.getPrincipal();
             Collection<? extends GrantedAuthority> authorities = principal.getAuthorities();
-            var roles = authorities.stream().map((t) -> t.getAuthority().replace("ROLE_", "")).toList();
+            // if this error happened: Caused by: java.lang.IllegalArgumentException: The class with java.util.ImmutableCollections$ListN and name of java.util.ImmutableCollections$ListN is not in the allowlist. If you believe this class is safe to deserialize, please provide an explicit mapping using Jackson annotations or by providing a Mixin. If the serialization is only done by a trusted source, you can also enable default typing. See https://github.com/spring-projects/spring-security/issues/4370 for details
+            // maybe because Collectors.toList() dont use ArrayList anymore
+            // then make sure authorities is mapped to ArrayList
+            // by change to .collect(Collectors.toCollection(ArrayList::new));
+            var roles = authorities.stream().map((t) -> t.getAuthority().replace("ROLE_", "")).collect(Collectors.toList());
             if (context.getTokenType() == OAuth2TokenType.ACCESS_TOKEN) {
                 context.getClaims()
                         .claim("roles", roles)
-                        .claim("authorities", authorities.stream().map((t) -> t.getAuthority()).toList());
+                        // change here too
+                        .claim("authorities", authorities.stream().map((t) -> t.getAuthority()).collect(Collectors.toList()));
             }
             if (context.getTokenType().getValue().equals(OidcParameterNames.ID_TOKEN)) {
                 context.getClaims().claim("roles", roles);
