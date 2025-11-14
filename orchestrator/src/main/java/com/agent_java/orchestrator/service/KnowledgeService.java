@@ -22,7 +22,7 @@ public class KnowledgeService {
 
     @Autowired
     VectorStore vectorStore;
-    
+
     private final Logger logger = LoggerFactory.getLogger(KnowledgeService.class);
 
     public KnowledgeImportingResponseVm importDocument(MultipartFile file) throws IOException {
@@ -49,7 +49,8 @@ public class KnowledgeService {
 
     KnowledgeImportingResponseVm importText(String fileName, String text) {
         var documents = chunkDocuments(fileName, text);
-        vectorStore.accept(documents);
+        vectorStore.add(documents);
+        logger.info("Document imported: {}, segments: {}", fileName, documents.size());
         return new KnowledgeImportingResponseVm(fileName, documents.size());
     }
 
