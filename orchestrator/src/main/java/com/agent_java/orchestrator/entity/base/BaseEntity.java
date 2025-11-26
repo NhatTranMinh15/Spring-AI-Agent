@@ -24,7 +24,7 @@ public abstract class BaseEntity {
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
-    OffsetDateTime createdAt = null;
+    OffsetDateTime createdAt = OffsetDateTime.now();
 
     @UpdateTimestamp
     @Column(name = "updated_at")
