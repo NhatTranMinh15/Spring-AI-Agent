@@ -1,14 +1,9 @@
 package com.agent_java.authorization_server.entity;
 
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -19,6 +14,9 @@ import lombok.Data;
 public class UserEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    UUID id;
+
     private String username;
 
     private String password;
@@ -29,17 +27,11 @@ public class UserEntity {
 
     String email;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-            name = "authorities",
-            joinColumns = {
-                @JoinColumn(name = "username")
-            }
-    )
-    @Column(name = "authority")
-    private Set<String> roles = Set.of("ROLE_USER");
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    Set<UserRolesEntity> userRoles = new HashSet<>();
 
-    public UserEntity(String username, String password, boolean enabled, String name, String email) {
+    public UserEntity(UUID id, String username, String password, boolean enabled, String name, String email) {
+        this.id = id;
         this.username = username;
         this.password = password;
         this.enabled = enabled;

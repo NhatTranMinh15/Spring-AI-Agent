@@ -1,6 +1,6 @@
 package com.agent_java.orchestrator.service;
 
-import com.agent_java.orchestrator.entity.Role;
+import com.agent_java.orchestrator.entity.RoleEntity;
 import com.agent_java.orchestrator.exception.ResourceNotFoundException;
 import com.agent_java.orchestrator.mapper.RoleMapper;
 import com.agent_java.orchestrator.repository.RoleRepository;
@@ -34,17 +34,17 @@ public class RoleService {
     @Transactional
     public RoleResponseVm createRole(RoleRequestVm request) {
         if (!roleRepository.existsByName(request.getName())) {
-            throw new IllegalArgumentException("Role with name '${request.getName()}' already exists");
+            throw new IllegalArgumentException("Role with name '" + request.getName() + "' already exists");
         }
-        var saved = roleRepository.save(new Role(request.getName(), request.getDescription()));
+        var saved = roleRepository.save(new RoleEntity(request.getName(), request.getDescription()));
         return mapper.toResponseVm(saved);
     }
 
     @Transactional
     public RoleResponseVm updateRole(UUID roleId, RoleRequestVm request) {
-        var role = roleRepository.findById(roleId).orElseThrow(() -> new ResourceNotFoundException("Role with id $roleId not found"));
+        var role = roleRepository.findById(roleId).orElseThrow(() -> new ResourceNotFoundException("Role with id " + roleId + " not found"));
         if (!roleRepository.existsByName(request.getName())) {
-            throw new IllegalArgumentException("Role with name '${request.getName()}' already exists");
+            throw new IllegalArgumentException("Role with name '" + request.getName() + "' already exists");
         }
         role.setName(request.getName());
         role.setDescription(request.getDescription());
@@ -55,16 +55,16 @@ public class RoleService {
     @Transactional
     public void deleteRole(UUID roleId) {
         if (!roleRepository.existsById(roleId)) {
-            throw new ResourceNotFoundException("Role with id $roleId not found");
+            throw new ResourceNotFoundException("Role with id " + roleId + " not found");
         }
         roleRepository.deleteById(roleId);
     }
 
-    public void assignRolesToUser(String username, List<String> roleNames) {
-        var user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User with username $username not found"));
+    public void assignRolesToUser(UUID id, List<String> roleNames) {
+        var user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User with ID " + id + " not found"));
         var roles = roleRepository.findByNameIn(roleNames);
         if (roles.isEmpty()) {
-            throw new ResourceNotFoundException("No roles found for given names: $roleNames");
+            throw new ResourceNotFoundException("No roles found for given names: " + roleNames);
         }
         user.getUserRoles().addAll(roles);
         userRepository.save(user);

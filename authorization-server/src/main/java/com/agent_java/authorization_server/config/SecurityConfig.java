@@ -39,13 +39,13 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() {
         return (String username) -> {
             var user = userRepository
-                    .findById(username)
+                    .findUserByUserName(username) // to avoid using FetchType.EAGER in entities
                     .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
             UserDetails u = User
                     .withUsername(user.getUsername())
                     .password(user.getPassword()) // must already be encoded with BCrypt
-                    .roles(user.getRoles().stream().map((t) -> t.replace("ROLE_", "")).toList().toArray(new String[user.getRoles().size()]))
+                    .roles(user.getUserRoles().stream().map((t) -> t.getRole().getName().replace("ROLE_", "")).toArray(String[]::new))
                     .disabled(!user.isEnabled())
                     .build();
             return u;

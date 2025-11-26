@@ -1,15 +1,16 @@
 package com.agent_java.orchestrator.repository;
 
-import com.agent_java.orchestrator.entity.Role;
+import com.agent_java.orchestrator.entity.RoleEntity;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface RoleRepository extends JpaRepository<Role, UUID> {
+public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
 
     boolean existsByName(String name);
 
-    Role findByName(String name);
+    Optional<RoleEntity> findByName(String name);
 
-    List<Role> findByNameIn(List<String> names);
+    List<RoleEntity> findByNameIn(List<String> names);
 }

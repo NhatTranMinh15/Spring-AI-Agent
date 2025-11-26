@@ -4,6 +4,7 @@ import com.agent_java.authorization_server.entity.UserEntity;
 import com.agent_java.authorization_server.repository.UserRepository;
 import com.agent_java.authorization_server.service.UserServiceImpl;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,8 +30,8 @@ public class UserServiceTest {
     @Test
     public void getUsers_return_paginated_users() {
         var users = List.of(
-                new UserEntity("testuser1", "password1", true, "Test", "testuser@gmail.com"),
-                new UserEntity("admin", "adminpass", true, "Admin", "admin@gmail.com")
+                new UserEntity(UUID.randomUUID(), "testuser1", "password1", true, "Test", "testuser@gmail.com"),
+                new UserEntity(UUID.randomUUID(), "admin", "adminpass", true, "Admin", "admin@gmail.com")
         );
         var pageable = PageRequest.of(0, 2);
         Page<UserEntity> page = new PageImpl(users, pageable, users.size());

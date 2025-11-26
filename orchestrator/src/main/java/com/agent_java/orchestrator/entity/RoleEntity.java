@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,22 +19,27 @@ import lombok.EqualsAndHashCode;
 @Table(name = "roles")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class Role extends BaseEntity {
+public class RoleEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID id;
+
     @Column(unique = true, nullable = false)
     String name;
+
     @Column(length = 500)
     String description;
-    @ManyToMany(mappedBy = "userRoles")
-    Set<User> users = new HashSet<>();
 
-    public Role(String name, String description) {
+    @ManyToMany(mappedBy = "userRoles")
+    Set<UserEntity> users = new HashSet<>();
+
+    @OneToMany(mappedBy = "role", orphanRemoval = true)
+    Set<UserRoleEntity> userRoles = new HashSet();
+
+    public RoleEntity(String name, String description) {
         this.name = name;
         this.description = description;
     }
-    
-    
+
 }

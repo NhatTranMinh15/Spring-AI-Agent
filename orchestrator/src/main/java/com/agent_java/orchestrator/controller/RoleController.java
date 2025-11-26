@@ -49,7 +49,7 @@ public class RoleController {
 
     @PostMapping("/assign")
     public ResponseEntity<Void> assignRoles(@Valid @RequestBody AssignRoleRequest request) {
-        roleService.assignRolesToUser(request.getUsername(), request.getRoleNames());
+        roleService.assignRolesToUser(request.getId(), request.getRoleNames());
         return ResponseEntity.noContent().build();
     }
 }
