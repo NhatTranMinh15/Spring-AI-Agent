@@ -9,11 +9,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import java.util.Set;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Entity
 @Table(name = "users")
 @Data
+@AllArgsConstructor
 public class UserEntity {
 
     @Id
@@ -23,11 +25,26 @@ public class UserEntity {
 
     private boolean enabled = true;
 
+    String name;
+
+    String email;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "authorities",
-            joinColumns = {@JoinColumn(name = "username")}
+            joinColumns = {
+                @JoinColumn(name = "username")
+            }
     )
     @Column(name = "authority")
     private Set<String> roles = Set.of("ROLE_USER");
+
+    public UserEntity(String username, String password, boolean enabled, String name, String email) {
+        this.username = username;
+        this.password = password;
+        this.enabled = enabled;
+        this.name = name;
+        this.email = email;
+    }
+
 }

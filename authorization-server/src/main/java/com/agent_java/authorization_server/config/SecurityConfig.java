@@ -21,8 +21,10 @@ public class SecurityConfig {
     @Autowired
     private UserRepository userRepository;
 
+    public static final int SECURITY_FILTER_ORDER = 3;
+
     @Bean
-    @Order(2)
+    @Order(SECURITY_FILTER_ORDER) // Run this after the AS chain
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/**")
@@ -39,7 +41,7 @@ public class SecurityConfig {
             var user = userRepository
                     .findById(username)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-            
+
             UserDetails u = User
                     .withUsername(user.getUsername())
                     .password(user.getPassword()) // must already be encoded with BCrypt
