@@ -4,21 +4,17 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-public class AgentResponseDto {
+@NoArgsConstructor
+public class AgentToolResponseDto {
 
     UUID id;
     String name;
-    String model;
+    String type;
     String description;
-    double temperature;
-    int maxTokens;
-    double topP;
-    double frequencyPenalty;
-    double presencePenalty;
+    Map<String, Object> config;
     boolean active;
-    String provider;
-    Map<String, Object> settings;
 }

@@ -2,13 +2,13 @@ package com.agent_java.orchestrator.mapper;
 
 import com.agent_java.orchestrator.dto.AgentRequestDto;
 import com.agent_java.orchestrator.dto.AgentResponseDto;
-import com.agent_java.orchestrator.entity.Agent;
+import com.agent_java.orchestrator.entity.agent.Agent;
 import java.math.BigDecimal;
 
 public class AgentMapper {
 
-    public Agent toEntity(AgentRequestDto request) {
-        return new Agent(
+    public static Agent toEntity(AgentRequestDto request) {
+        var agent = new Agent(
                 request.getName(),
                 request.getModel(),
                 request.getDescription(),
@@ -17,14 +17,14 @@ public class AgentMapper {
                 toBigDecimalOrDefault(request.getTopP(), Agent.DEFAULT_TOP_P),
                 toBigDecimalOrDefault(request.getFrequencyPenalty(), Agent.DEFAULT_FREQUENCY_PENALTY),
                 toBigDecimalOrDefault(request.getPresencePenalty(), Agent.DEFAULT_PRESENCE_PENALTY),
-                request.isActive(),
                 request.getProvider(),
                 request.getSettings()
         );
-
+        agent.setActive(request.isActive());
+        return agent;
     }
 
-    public AgentResponseDto toResponse(Agent agent) {
+    public static AgentResponseDto toResponse(Agent agent) {
         return new AgentResponseDto(
                 agent.getId(),
                 agent.getName(),
@@ -37,13 +37,11 @@ public class AgentMapper {
                 agent.getPresencePenalty().doubleValue(),
                 agent.isActive(),
                 agent.getProvider(),
-                agent.getSettings(),
-                agent.getCreatedAt().toLocalDateTime(),
-                agent.getUpdatedAt().toLocalDateTime()
+                agent.getSettings()
         );
     }
 
-    private BigDecimal toBigDecimalOrDefault(Double d, BigDecimal def) {
+    private static BigDecimal toBigDecimalOrDefault(Double d, BigDecimal def) {
         return d != null ? new BigDecimal(d) : def;
     }
 }

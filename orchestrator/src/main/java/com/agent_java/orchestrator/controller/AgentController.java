@@ -30,18 +30,21 @@ public class AgentController {
     AgentService service;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('SCOPE_agents.read') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_agents.read') or hasRole('ROLE_ADMIN')")
     @Operation(summary = "List all active agents")
     public List<AgentResponseDto> getAllActive() {
         return service.getAllActive();
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('SCOPE_agents.read') or hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Get agent by ID")
     public AgentResponseDto getById(@PathVariable UUID id) {
         return service.getById(id);
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('SCOPE_agents.write') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_agents.write') or hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new agent")
     public AgentResponseDto create(@Valid @RequestBody AgentRequestDto request) {
@@ -49,14 +52,14 @@ public class AgentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_agents.write') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_agents.write') or hasRole('ROLE_ADMIN')")
     @Operation(summary = "Update an existing agent")
     public AgentResponseDto update(@PathVariable UUID id, @Valid @RequestBody AgentRequestDto request) {
         return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_agents.write') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_agents.write') or hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Soft delete an agent")
     public void delete(@PathVariable UUID id) {

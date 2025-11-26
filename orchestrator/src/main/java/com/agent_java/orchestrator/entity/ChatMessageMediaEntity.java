@@ -1,5 +1,6 @@
 package com.agent_java.orchestrator.entity;
 
+import com.agent_java.orchestrator.entity.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -51,14 +52,14 @@ public class ChatMessageMediaEntity extends BaseEntity {
         if (!contentType.equals(e.contentType)) {
             return false;
         }
-        return chatMessage.id == e.chatMessage.id;
+        return chatMessage.getId() == e.chatMessage.getId();
     }
 
     @Override
     public int hashCode() {
         var result = fileName.hashCode();
         result = 31 * result + contentType.hashCode();
-        result = 31 * result + chatMessage.id.hashCode();
+        result = 31 * result + chatMessage.getId().hashCode();
         return result;
     }
 

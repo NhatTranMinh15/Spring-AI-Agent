@@ -9,15 +9,23 @@ import com.agent_java.orchestrator.viewmodel.RoleRequestVm;
 import com.agent_java.orchestrator.viewmodel.RoleResponseVm;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RoleService {
 
-    private RoleRepository roleRepository;
-    private UserRepository userRepository;
-    private RoleMapper mapper;
+    private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final RoleMapper mapper;
+
+    @Autowired
+    public RoleService(RoleRepository roleRepository, UserRepository userRepository, RoleMapper mapper) {
+        this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
+        this.mapper = mapper;
+    }
 
     public List<RoleResponseVm> listRoles() {
         return roleRepository.findAll().stream().map(mapper::toResponseVm).toList();

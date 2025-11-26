@@ -1,6 +1,6 @@
 package com.agent_java.orchestrator.viewmodel;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public interface ConversationResponseVm {
@@ -9,5 +9,5 @@ public interface ConversationResponseVm {
 
     String getTitle();
 
-    ZonedDateTime getCreatedAt();
+    OffsetDateTime getCreatedAt();
 }

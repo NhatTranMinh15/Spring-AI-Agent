@@ -51,13 +51,6 @@ public class JwtAuthConverterConfig {
         http.csrf((it) -> it.disable());
         http.authorizeHttpRequests((it) -> {
             it.requestMatchers("/public/**").permitAll();
-            it.requestMatchers("/api/knowledge").hasRole("ADMIN");
-            it.requestMatchers("/api/roles").hasRole("ADMIN");
-            it.requestMatchers(HttpMethod.GET, "/api/**")
-                    .hasAnyAuthority("SCOPE_chatbot.read", "SCOPE_chatbot.write");
-            List.of(HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE).forEach(method
-                    -> it.requestMatchers(method, "/api/**").hasAuthority("SCOPE_chatbot.write")
-            );
             it.anyRequest().authenticated();
         });
         http.oauth2ResourceServer((rs) -> rs.jwt((jwt) -> jwt.jwtAuthenticationConverter(jwtAuthConverter)));

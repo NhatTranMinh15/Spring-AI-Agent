@@ -7,7 +7,9 @@ import com.agent_java.orchestrator.viewmodel.RoleResponseVm;
 import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,21 +21,23 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/roles")
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 public class RoleController {
 
+    @Autowired
     RoleService roleService;
 
     @GetMapping
-    ResponseEntity<List<RoleResponseVm>> listRoles() {
+    public ResponseEntity<List<RoleResponseVm>> listRoles() {
         return ResponseEntity.ok(roleService.listRoles());
     }
 
-    ResponseEntity<RoleResponseVm> createRole(@Valid @RequestBody RoleRequestVm request) {
+    public ResponseEntity<RoleResponseVm> createRole(@Valid @RequestBody RoleRequestVm request) {
         return ResponseEntity.ok(roleService.createRole(request));
     }
 
     @PutMapping("/{roleId}")
-    ResponseEntity<RoleResponseVm> updateRole(@PathVariable UUID roleId, @Valid @RequestBody RoleRequestVm request) {
+    public ResponseEntity<RoleResponseVm> updateRole(@PathVariable UUID roleId, @Valid @RequestBody RoleRequestVm request) {
         return ResponseEntity.ok(roleService.updateRole(roleId, request));
     }
 

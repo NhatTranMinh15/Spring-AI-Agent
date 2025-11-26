@@ -1,6 +1,6 @@
 package com.agent_java.orchestrator.dto;
 
-import com.agent_java.orchestrator.entity.Agent;
+import com.agent_java.orchestrator.entity.agent.Agent;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -8,9 +8,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AgentRequestDto {
 
     @NotBlank(message = "Agent name must not be blank")

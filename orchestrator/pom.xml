@@ -30,6 +30,7 @@
         <java.version>21</java.version>
         <spring-ai.version>1.0.1</spring-ai.version>
         <springdoc.version>2.8.13</springdoc.version>
+        <spring.ai.vectorstore.pgvector.embedding-dimension>1536</spring.ai.vectorstore.pgvector.embedding-dimension>
     </properties>
     
     <dependencies>
@@ -101,6 +102,11 @@
             <artifactId>spring-ai-starter-mcp-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -112,12 +118,22 @@
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-vector</artifactId>
+            <version>6.6.33.Final</version>
         </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
@@ -192,7 +208,7 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>11.14.0</version>
                 <configuration>
-                    <url>jdbc:postgresql://localhost:5432/orchestrator</url>
+                    <url>jdbc:postgresql://localhost:5433/orchestrator</url>
                     <user>admin</user>
                     <password>admin</password>
                     <schemas>
@@ -201,6 +217,9 @@
                     <baselineOnMigrate>true</baselineOnMigrate>
                     <table>flyway_schema_history_orchestrator</table>
                     <cleanDisabled>false</cleanDisabled>
+                    <placeholders>
+                        <spring.ai.vectorstore.pgvector.embedding-dimension>${spring.ai.vectorstore.pgvector.embedding-dimension}</spring.ai.vectorstore.pgvector.embedding-dimension>
+                    </placeholders>
                 </configuration>
             </plugin>
             <plugin>
