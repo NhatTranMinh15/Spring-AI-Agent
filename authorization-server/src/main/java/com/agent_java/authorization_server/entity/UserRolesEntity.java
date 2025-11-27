@@ -2,14 +2,12 @@ package com.agent_java.authorization_server.entity;
 
 import jakarta.persistence.*;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "user_roles")
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class UserRolesEntity {
 
@@ -24,4 +22,11 @@ public class UserRolesEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     UserEntity user;
+
+    public UserRolesEntity(RolesEntity role, UserEntity user) {
+        this.role = role;
+        this.user = user;
+    }
+    
+    
 }

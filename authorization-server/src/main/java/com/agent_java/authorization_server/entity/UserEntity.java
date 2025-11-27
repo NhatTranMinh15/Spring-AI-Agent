@@ -30,11 +30,15 @@ public class UserEntity {
     @Column(unique = true, nullable = false)
     String email;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.ALL}, orphanRemoval = true)
     Set<UserRolesEntity> userRoles = new HashSet<>();
 
     public UserEntity(UUID id, String username, String password, boolean enabled, String name, String email) {
+        this(username, password, enabled, name, email);
         this.id = id;
+    }
+
+    public UserEntity(String username, String password, boolean enabled, String name, String email) {
         this.username = username;
         this.password = password;
         this.enabled = enabled;

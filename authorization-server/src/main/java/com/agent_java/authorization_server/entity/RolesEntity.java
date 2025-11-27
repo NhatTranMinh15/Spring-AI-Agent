@@ -21,10 +21,16 @@ public class RolesEntity {
 
     @Column(unique = true, nullable = false)
     String name;
-    
+
     @Column(length = 500)
     String description = null;
-    
+
     @OneToMany(mappedBy = "role")
     Set<UserRolesEntity> userRoles = new HashSet();
+
+    public RolesEntity(UUID id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
 }
