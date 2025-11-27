@@ -25,9 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/knowledge/{knowledgeId}/chunks")
+@RequestMapping("/api/agents/{agentId}/knowledge/{knowledgeId}/chunks")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
-@Tag(name = "Knowledge Chunks", description = "Manage text chunks and embeddings for knowledge sources")
+@Tag(name = "Knowledge Chunks", description = "Manage text chunks and embeddings for knowledge sources of an agent")
 public class KnowledgeChunkController {
 
     KnowledgeChunkService chunkService;
@@ -40,40 +40,54 @@ public class KnowledgeChunkController {
     }
 
     @GetMapping
-    @Operation(summary = "List all chunks for a knowledge source")
-    public List<KnowledgeChunkResponseDto> listChunks(@PathVariable UUID knowledgeId) {
-        return chunkService.getByKnowledge(knowledgeId);
+    @Operation(summary = "List all chunks for a knowledge source of an agent")
+    public List<KnowledgeChunkResponseDto> listChunks(@PathVariable UUID agentId, @PathVariable UUID knowledgeId) {
+        return chunkService.getByKnowledge(agentId, knowledgeId);
     }
 
     @GetMapping("/count")
-    @Operation(summary = "Count all chunks for a knowledge source")
-    public long countChunks(@PathVariable UUID knowledgeId) {
-        return chunkService.countByKnowledge(knowledgeId);
+    @Operation(summary = "Count all chunks for a knowledge source of an agent")
+    public long countChunks(@PathVariable UUID agentId, @PathVariable UUID knowledgeId) {
+        return chunkService.countByKnowledge(agentId, knowledgeId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a single chunk manually")
-    public KnowledgeChunkResponseDto createChunk(@PathVariable UUID knowledgeId, @Valid @RequestBody KnowledgeChunkRequestDto req) {
-        return chunkService.addChunk(knowledgeId, req.getContent(), req.getMetadata(), null);
+    public KnowledgeChunkResponseDto createChunk(
+            @PathVariable UUID agentId,
+            @PathVariable UUID knowledgeId,
+            @Valid @RequestBody KnowledgeChunkRequestDto req) {
+        return chunkService.addChunk(agentId, knowledgeId, req.getContent(), req.getMetadata(), null);
     }
 
     @PutMapping("/{chunkId}")
     @Operation(summary = "Update a chunk's content and metadata")
-    public KnowledgeChunkResponseDto updateChunk(@PathVariable UUID chunkId, @Valid @RequestBody KnowledgeChunkRequestDto req) {
-        return chunkService.updateChunk(chunkId, req.getContent(), req.getMetadata());
+    public KnowledgeChunkResponseDto updateChunk(
+            @PathVariable UUID agentId,
+            @PathVariable UUID knowledgeId,
+            @PathVariable UUID chunkId,
+            @Valid @RequestBody KnowledgeChunkRequestDto req) {
+        return chunkService.updateChunk(agentId, knowledgeId, chunkId, req.getContent(), req.getMetadata());
     }
 
     @PostMapping("/import")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Import a document and split into chunks")
-    public KnowledgeImportingResponseVm importFile(@PathVariable UUID knowledgeId, @RequestParam MultipartFile file) {
-        return knowledgeService.importDocument(knowledgeId, file);
+    public KnowledgeImportingResponseVm importFile(
+            @PathVariable UUID agentId,
+            @PathVariable UUID knowledgeId,
+            @RequestParam MultipartFile file) {
+        return knowledgeService.importDocument(agentId, knowledgeId, file);
     }
 
     @GetMapping("/search")
     @Operation(summary = "Search similar chunks by text query")
-    public void searchSimilarChunks(@RequestParam String query, @RequestParam(defaultValue = "5") int topK) {
-        chunkService.searchSimilarChunks(query, topK);
+    public void searchSimilarChunks(
+            @PathVariable UUID agentId,
+            @PathVariable UUID knowledgeId,
+            @RequestParam String query,
+            @RequestParam(defaultValue = "5") int topK) {
+        chunkService.searchSimilarChunks(agentId, knowledgeId, query, topK);
     }
 }

@@ -7,12 +7,16 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class AgentToolRequestDto {
+public class ToolRequestDto {
 
     @NotBlank
     String name;
-    String type =null;
-    String description =null;
+
+    String type = null;
+
+    String description = null;
+
     Map<String, Object> config = null;
+
     boolean active = true;
 }

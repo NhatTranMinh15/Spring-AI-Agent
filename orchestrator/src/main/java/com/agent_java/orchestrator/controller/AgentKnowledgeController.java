@@ -6,11 +6,9 @@ import com.agent_java.orchestrator.service.AgentKnowledgeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,47 +22,59 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/knowledge")
+@RequestMapping("/api/agents/{agentId}/knowledge")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
-@Tag(name = "Agent Knowledge", description = "Manage knowledge sources assignable to agents")
 public class AgentKnowledgeController {
 
-    private final AgentKnowledgeService service;
+    private final AgentKnowledgeService agentKnowledgeService;
 
     @Autowired
-    public AgentKnowledgeController(AgentKnowledgeService service) {
-        this.service = service;
+    public AgentKnowledgeController(AgentKnowledgeService agentKnowledgeService) {
+        this.agentKnowledgeService = agentKnowledgeService;
     }
 
     @GetMapping
-    public ResponseEntity getAllActive() {
-        List<AgentKnowledgeResponseDto> result = service.getAllActive();
-        return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity getById(@PathVariable UUID id) {
-        AgentKnowledgeResponseDto result = service.getById(id);
+    public ResponseEntity list(@PathVariable UUID agentId) {
+        List<AgentKnowledgeResponseDto> result = agentKnowledgeService.getByAgent(agentId);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity create(@Valid @RequestBody AgentKnowledgeRequestDto req) {
-        AgentKnowledgeResponseDto result = service.create(req);
+    public ResponseEntity create(
+            @PathVariable UUID agentId,
+            @Valid @RequestBody AgentKnowledgeRequestDto request
+    ) {
+        AgentKnowledgeResponseDto result = agentKnowledgeService.create(agentId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity update(@PathVariable UUID id, @Valid @RequestBody AgentKnowledgeRequestDto req) {
-        AgentKnowledgeResponseDto result = service.update(id, req);
+    @PutMapping("/{knowledgeId}")
+    public ResponseEntity update(
+            @PathVariable UUID agentId,
+            @PathVariable UUID knowledgeId,
+            @Valid @RequestBody AgentKnowledgeRequestDto request
+    ) {
+        AgentKnowledgeResponseDto result = agentKnowledgeService.update(agentId, knowledgeId, request);
         return ResponseEntity.ok(result);
     }
 
-    @DeleteMapping("/{id}")
+    @GetMapping("/{knowledgeId}")
+    public ResponseEntity get(
+            @PathVariable UUID agentId,
+            @PathVariable UUID knowledgeId
+    ) {
+        AgentKnowledgeResponseDto result = agentKnowledgeService.getOneForAgent(agentId, knowledgeId);
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/{knowledgeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity delete(@PathVariable UUID id) {
-        service.softDelete(id);
+    public ResponseEntity delete(
+            @PathVariable UUID agentId,
+            @PathVariable UUID knowledgeId
+    ) {
+        agentKnowledgeService.softDelete(agentId, knowledgeId);
         return ResponseEntity.noContent().build();
     }
 

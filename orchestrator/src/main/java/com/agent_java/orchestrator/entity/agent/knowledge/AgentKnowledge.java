@@ -1,8 +1,12 @@
 package com.agent_java.orchestrator.entity.agent.knowledge;
 
+import com.agent_java.orchestrator.entity.agent.Agent;
 import com.agent_java.orchestrator.entity.base.SoftDeletableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -20,13 +24,17 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor
 public class AgentKnowledge extends SoftDeletableEntity {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agent_id", nullable = false)
+    Agent agent;
+
     @Column(nullable = false, length = 100)
     String name;
 
     @Column(name = "source_type", length = 50)
     String sourceType = null; // e.g., "url", "pdf", "repo", "dataset"
 
-    @Column(name = "source_uri", unique = true)
+    @Column(name = "source_uri")
     String sourceUri = null;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -39,6 +47,5 @@ public class AgentKnowledge extends SoftDeletableEntity {
     public AgentKnowledge(String name) {
         this.name = name;
     }
-    
-    
+
 }

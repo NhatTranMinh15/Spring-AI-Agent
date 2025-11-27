@@ -5,6 +5,7 @@ import com.agent_java.orchestrator.entity.agent.knowledge.KnowledgeChunk;
 import com.agent_java.orchestrator.repository.AgentKnowledgeRepository;
 import com.agent_java.orchestrator.repository.KnowledgeChunkRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,10 +35,11 @@ public class KnowledgeChunkService {
     }
 
     @Transactional
-    public KnowledgeChunkResponseDto addChunk(UUID knowledgeId, String content, Map<String, Object> metadata, Integer chunkOrder) {
-        var knowledge = knowledgeRepo.findById(knowledgeId).orElseThrow(() -> new EntityNotFoundException("Knowledge not found: " + knowledgeId));
+    public KnowledgeChunkResponseDto addChunk(UUID agentId, UUID knowledgeId, String content, Map<String, Object> metadata, Integer chunkOrder) {
+        var knowledge = knowledgeRepo.findByIdAndAgentId(knowledgeId, agentId)
+                .orElseThrow(() -> new EntityNotFoundException("Knowledge " + knowledgeId + " not found for agent " + agentId));
 
-        var order = chunkOrder != null ? chunkOrder : getNextChunkOrderForKnowledge(knowledgeId);
+        var order = chunkOrder != null ? chunkOrder : getNextChunkOrderForKnowledge(agentId, knowledgeId);
         var embedding = embeddingModel.embed(content);
 
         var chunk = new KnowledgeChunk(knowledge, order, content, metadata, embedding);
@@ -47,45 +49,67 @@ public class KnowledgeChunkService {
     }
 
     @Transactional
-    public KnowledgeChunkResponseDto updateChunk(UUID chunkId, String newContent, Map<String, Object> newMetadata) {
-        var chunk
-                = chunkRepo.findById(chunkId).orElseThrow(() -> new EntityNotFoundException("Chunk not found: " + chunkId));
+    public KnowledgeChunkResponseDto updateChunk(UUID agentId, UUID knowledgeId, UUID chunkId, String newContent, Map<String, Object> newMetadata) {
+        var chunk = chunkRepo.findById(chunkId)
+                .orElseThrow(() -> new EntityNotFoundException("Chunk " + chunkId + " not found"));
+
+        if (chunk.getKnowledge().getId() != knowledgeId) {
+            throw new IllegalArgumentException("Chunk " + chunkId + " does not belong to knowledge " + knowledgeId);
+        }
+
+        if (chunk.getKnowledge().getAgent().getId() != agentId) {
+            throw new EntityNotFoundException("Chunk $chunkId does not belong to agent $agentId");
+        }
 
         chunk.setContent(newContent);
         chunk.setMetadata(newMetadata);
         chunk.setEmbedding(embeddingModel.embed(newContent));
 
         vectorStore.add(List.of(buildDocument(chunk)));
-        return KnowledgeChunkResponseDto.from(chunk);
+        return KnowledgeChunkResponseDto.from(chunkRepo.save(chunk));
     }
 
     @Transactional(readOnly = true)
-    public List<KnowledgeChunkResponseDto> getByKnowledge(UUID knowledgeId) {
-        return chunkRepo.findAllByKnowledgeId(knowledgeId).stream().map(KnowledgeChunkResponseDto::from).collect(Collectors.toList());
+    public List<KnowledgeChunkResponseDto> getByKnowledge(UUID agentId, UUID knowledgeId) {
+        return chunkRepo.findAllByKnowledgeIdAndKnowledgeAgentIdOrderByChunkOrderAsc(knowledgeId, agentId)
+                .stream()
+                .map(KnowledgeChunkResponseDto::from)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public long countByKnowledge(UUID knowledgeId) {
-        return chunkRepo.countByKnowledgeId(knowledgeId);
+    public long countByKnowledge(UUID agentId, UUID knowledgeId) {
+        return chunkRepo.countByKnowledgeIdAndKnowledgeAgentId(knowledgeId, agentId);
     }
 
     @Transactional(readOnly = true)
-    public Integer getNextChunkOrderForKnowledge(UUID knowledgeId) {
-        var currentOrder = chunkRepo.findMaxChunkOrderByKnowledgeId(knowledgeId).orElse(0);
+    public int getNextChunkOrderForKnowledge(UUID agentId, UUID knowledgeId) {
+        var currentOrder = chunkRepo.findMaxChunkOrderByKnowledgeIdAndAgentId(knowledgeId, agentId).orElse(0);
         return currentOrder + 1;
     }
 
     @Transactional(readOnly = true)
-    public List<KnowledgeChunkResponseDto> searchSimilarChunks(String query, Integer topK) {
-        var activeKnowledgeIds = chunkRepo.findAllKnowledgeIdsActive().stream().map((t) -> t.toString()).collect(Collectors.toList());
+    public List<KnowledgeChunkResponseDto> searchSimilarChunks(UUID agentId, UUID knowledgeId, String query, Integer topK) {
+        // Ensure knowledge belongs to agent
+
+        if (!knowledgeRepo.existsByIdAndAgentId(knowledgeId, agentId)) {
+            throw new EntityNotFoundException("Knowledge " + knowledgeId + " not found for agent " + agentId);
+        }
 
         List<Document> results = vectorStore.similaritySearch(query);
 
+        if (results.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        var activeKnowledgeIds = chunkRepo.findAllKnowledgeIdsActiveByAgent(agentId).stream().map((t) -> t.toString()).collect(Collectors.toList());
+
         return results.stream()
                 .filter((doc) -> {
-                    var knowledgeId = doc.getMetadata().get("knowledge_id");
-                    return knowledgeId != null && activeKnowledgeIds.contains(knowledgeId.toString());
+                    var knowledgeId1 = doc.getMetadata().get("knowledge_id");
+                    return knowledgeId1 != null && activeKnowledgeIds.contains(knowledgeId1.toString());
                 })
+                .limit(topK)
                 .map(KnowledgeChunkResponseDto::fromDocument)
                 .collect(Collectors.toList());
     }

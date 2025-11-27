@@ -1,8 +1,8 @@
 package com.agent_java.orchestrator.controller;
 
-import com.agent_java.orchestrator.dto.AgentToolRequestDto;
-import com.agent_java.orchestrator.dto.AgentToolResponseDto;
-import com.agent_java.orchestrator.service.AgentToolService;
+import com.agent_java.orchestrator.dto.ToolRequestDto;
+import com.agent_java.orchestrator.dto.ToolResponseDto;
+import com.agent_java.orchestrator.service.ToolService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -23,34 +23,34 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/tools")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
-@Tag(name = "Agent Tools", description = "Manage AI Tools assignable to agents")
-public class AgentToolController {
+@Tag(name = "Tools", description = "Manage AI Tools assignable to agents")
+public class ToolController {
 
-    private final AgentToolService service;
+    private final ToolService service;
 
     @Autowired
-    public AgentToolController(AgentToolService service) {
+    public ToolController(ToolService service) {
         this.service = service;
     }
 
     @GetMapping
-    public List<AgentToolResponseDto> getAllActive() {
+    public List<ToolResponseDto> getAllActive() {
         return service.getAllActive();
     }
 
     @GetMapping("/{id}")
-    public AgentToolResponseDto getById(@PathVariable UUID id) {
+    public ToolResponseDto getById(@PathVariable UUID id) {
         return service.getById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public AgentToolResponseDto create(@Valid @RequestBody AgentToolRequestDto req) {
+    public ToolResponseDto create(@Valid @RequestBody ToolRequestDto req) {
         return service.create(req);
     }
 
     @PutMapping("/{id}")
-    public AgentToolResponseDto update(@PathVariable UUID id, @Valid @RequestBody AgentToolRequestDto req) {
+    public ToolResponseDto update(@PathVariable UUID id, @Valid @RequestBody ToolRequestDto req) {
         return service.update(id, req);
     }
 

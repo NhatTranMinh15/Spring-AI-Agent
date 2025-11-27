@@ -1,10 +1,11 @@
 package com.agent_java.orchestrator.service;
 
+import com.agent_java.orchestrator.dto.AgentToolResponseDto;
 import com.agent_java.orchestrator.entity.agent.AgentTool;
-import com.agent_java.orchestrator.entity.agent.mapping.AgentToolMapping;
+import com.agent_java.orchestrator.mapper.AgentToolMapper;
 import com.agent_java.orchestrator.repository.AgentRepository;
-import com.agent_java.orchestrator.repository.AgentToolMappingRepository;
 import com.agent_java.orchestrator.repository.AgentToolRepository;
+import com.agent_java.orchestrator.repository.ToolRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
@@ -16,14 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class AgentToolAssignmentService {
 
     private final AgentRepository agentRepository;
-    private final AgentToolRepository toolRepository;
-    private final AgentToolMappingRepository mappingRepository;
+    private final ToolRepository toolRepository;
+    private final AgentToolRepository agentToolRepository;
 
     @Autowired
-    public AgentToolAssignmentService(AgentRepository agentRepository, AgentToolRepository toolRepository, AgentToolMappingRepository mappingRepository) {
+    public AgentToolAssignmentService(AgentRepository agentRepository, ToolRepository toolRepository, AgentToolRepository agentToolRepository) {
         this.agentRepository = agentRepository;
         this.toolRepository = toolRepository;
-        this.mappingRepository = mappingRepository;
+        this.agentToolRepository = agentToolRepository;
     }
 
     @Transactional
@@ -46,21 +47,21 @@ public class AgentToolAssignmentService {
         if (!tool.isActive()) {
             throw new IllegalArgumentException("Cannot assign inactive tool to agent");
         }
-        boolean isExisted = mappingRepository.existsByAgentIdAndToolId(agentId, toolId);
+        boolean isExisted = agentToolRepository.existsByAgentIdAndToolId(agentId, toolId);
         if (isExisted) {
             throw new IllegalArgumentException("Tool already assigned to this agent");
         }
 
-        mappingRepository.save(AgentToolMapping.of(agent, tool));
+        agentToolRepository.save(AgentTool.of(agent, tool));
     }
 
     @Transactional
     public void unassignTool(UUID agentId, UUID toolId) {
-        mappingRepository.deleteByAgentIdAndToolId(agentId, toolId);
+        agentToolRepository.deleteByAgentIdAndToolId(agentId, toolId);
     }
 
     @Transactional(readOnly = true)
-    public List<AgentTool> getTools(UUID agentId) {
-        return mappingRepository.findByAgentId(agentId).stream().map((t) -> t.getTool()).toList();
+    public List<AgentToolResponseDto> getTools(UUID agentId) {
+        return agentToolRepository.findByAgentId(agentId).stream().map(AgentToolMapper::toResponse).toList();
     }
 }

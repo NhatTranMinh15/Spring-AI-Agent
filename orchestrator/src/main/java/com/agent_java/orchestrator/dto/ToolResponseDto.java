@@ -1,6 +1,5 @@
 package com.agent_java.orchestrator.dto;
 
-import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -10,16 +9,17 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AgentKnowledgeResponseDto {
+public class ToolResponseDto {
 
     UUID id;
-    UUID agentId;
+
     String name;
-    String sourceType;
-    String sourceUri;
-    Map<String, Object> metadata;
-    String embeddingModel;
+
+    String type;
+
+    String description;
+
+    Map<String, Object> config;
+
     boolean active;
-    OffsetDateTime createdAt;
-    OffsetDateTime updatedAt;
 }

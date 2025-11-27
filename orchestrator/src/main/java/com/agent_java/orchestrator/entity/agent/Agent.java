@@ -1,12 +1,17 @@
 package com.agent_java.orchestrator.entity.agent;
 
+import com.agent_java.orchestrator.entity.agent.knowledge.AgentKnowledge;
 import com.agent_java.orchestrator.entity.base.SoftDeletableEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -87,6 +92,12 @@ public class Agent extends SoftDeletableEntity {
     @Version
     @Column(nullable = false)
     int version = 0;
+
+    @OneToMany(mappedBy = "agent", cascade = {CascadeType.ALL}, orphanRemoval = true)
+    Set<AgentTool> tools = new HashSet();
+
+    @OneToMany(mappedBy = "agent", cascade = {CascadeType.ALL}, orphanRemoval = true)
+    Set<AgentKnowledge> knowledge = new HashSet();
 
     public Agent() {
     }
