@@ -28,15 +28,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConversationService {
 
-    private ChatModelService chatModelService;
-    private ConversationRepository repository;
-    private ChatMessageRepository messageRepo;
-    private ChatMessageMediaRepository messageMediaRepo;
+    private final ChatModelService chatModelService;
+    private final ConversationRepository conversationRepo;
+    private final ChatMessageRepository messageRepo;
+    private final ChatMessageMediaRepository messageMediaRepo;
 
     @Autowired
-    public ConversationService(ChatModelService chatModelService, ConversationRepository repository, ChatMessageRepository messageRepo, ChatMessageMediaRepository messageMediaRepo) {
+    public ConversationService(ChatModelService chatModelService, ConversationRepository conversationRepo, ChatMessageRepository messageRepo, ChatMessageMediaRepository messageMediaRepo) {
         this.chatModelService = chatModelService;
-        this.repository = repository;
+        this.conversationRepo = conversationRepo;
         this.messageRepo = messageRepo;
         this.messageMediaRepo = messageMediaRepo;
     }
@@ -51,12 +51,13 @@ public class ConversationService {
     }
 
     public List<ConversationResponseVm> listConversationByUser(String username) {
-        var conversations = repository.listActiveConversationsByUser(username);
+        var conversations = conversationRepo.listActiveConversationsByUser(username);
         return conversations;
     }
 
     public List<ChatMessageResponseVm> listMessageByConversation(UUID conversationId) {
-        repository.findById(conversationId).orElseThrow(() -> new ResourceNotFoundException("Conversation not found: $conversationId"));
+        conversationRepo.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found: " + conversationId));
         return messageRepo.listMessageByConversationId(conversationId).stream().map((it) -> ChatMessageMapper.toResponse(it)).toList();
     }
 
@@ -69,7 +70,7 @@ public class ConversationService {
                 titleSummarize != null ? titleSummarize : chatReq.question(),
                 username
         );
-        UUID conversationId = repository.save(conversation).getId();
+        UUID conversationId = conversationRepo.save(conversation).getId();
         // Kotlin Elvis operator﻿
         if (conversationId == null) {
             throw new BadRequestException("Can't create new conversation");
@@ -78,7 +79,8 @@ public class ConversationService {
     }
 
     private ChatResponseVm addMessage(UUID conversationId, ChatRequestVm request) {
-        var conversation = repository.findById(conversationId).orElseThrow(() -> new ResourceNotFoundException("Conversation not found: $conversationId"));
+        var conversation = conversationRepo.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found: " + conversationId));
         // Save question into DB first
         var questionMsg = new ChatMessageEntity(request.question(), conversation, Constant.QUESTION_TYPE);
         var questionEntity = this.messageRepo.save(questionMsg);
@@ -108,9 +110,34 @@ public class ConversationService {
 
     @Transactional
     public void deleteConversation(UUID conversationId) {
-        var conversation = repository.findById(conversationId).orElseThrow(() -> new ResourceNotFoundException("Conversation not found: $conversationId"));
+        var conversation = conversationRepo.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found: " + conversationId));
         conversation.setActive(false);
-        repository.save(conversation);
+        conversationRepo.save(conversation);
+    }
+
+    @Transactional
+    public ConversationResponseVm updateConversationTitle(
+            UUID conversationId,
+            String newTitle,
+            String username
+    ) {
+        var conversation = conversationRepo.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found: " + conversationId));
+
+        if (!conversation.getUsername().equals(username)) {
+            // Do not reveal existence of the conversation to unauthorized users
+            throw new ResourceNotFoundException("Conversation not found: " + conversationId);
+        }
+
+        conversation.setTitle(newTitle.trim());
+        var updatedConversation = this.conversationRepo.save(conversation);
+        
+        return new ConversationResponseVmImpl(
+                updatedConversation.getId(),
+                updatedConversation.getTitle(),
+                updatedConversation.getCreatedAt()
+        );
     }
 
     private void saveMessageMedia(ChatRequestVm chatReq, ChatMessageEntity questionEntity) {

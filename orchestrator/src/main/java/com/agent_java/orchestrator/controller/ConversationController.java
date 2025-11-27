@@ -5,6 +5,7 @@ import com.agent_java.orchestrator.viewmodel.ChatMessageResponseVm;
 import com.agent_java.orchestrator.viewmodel.ChatRequestVm;
 import com.agent_java.orchestrator.viewmodel.ChatResponseVm;
 import com.agent_java.orchestrator.viewmodel.ConversationResponseVm;
+import com.agent_java.orchestrator.viewmodel.ConversationUpdateRequestVm;
 import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,5 +54,16 @@ public class ConversationController {
     public ResponseEntity deleteConversation(@PathVariable UUID conversationId) {
         conversationService.deleteConversation(conversationId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{conversationId}")
+    public ResponseEntity<ConversationResponseVm> updateConversation(
+            @PathVariable UUID conversationId,
+            @Valid @RequestBody ConversationUpdateRequestVm request,
+            Authentication authentication
+    ) {
+        var username = ((Jwt) authentication.getPrincipal()).getSubject();
+        var updatedConversation = conversationService.updateConversationTitle(conversationId, request.getTitle(), username);
+        return ResponseEntity.ok(updatedConversation);
     }
 }
