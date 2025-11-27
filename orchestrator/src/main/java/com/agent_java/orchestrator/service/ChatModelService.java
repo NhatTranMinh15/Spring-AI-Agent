@@ -43,6 +43,7 @@ public class ChatModelService {
     @Nullable
     public String call(ChatRequestVm request, List<String> history) {
         StringBuilder sb = new StringBuilder();
+        sb.append(Constant.SEARCH_TOOL_INSTRUCTION).append("\n");
         for (String h : history) {
             sb.append(h).append("\n");
         }
