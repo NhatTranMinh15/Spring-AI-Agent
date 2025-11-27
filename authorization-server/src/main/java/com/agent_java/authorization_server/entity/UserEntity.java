@@ -6,11 +6,13 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class UserEntity {
 
     @Id
@@ -25,6 +27,7 @@ public class UserEntity {
 
     String name;
 
+    @Column(unique = true, nullable = false)
     String email;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
