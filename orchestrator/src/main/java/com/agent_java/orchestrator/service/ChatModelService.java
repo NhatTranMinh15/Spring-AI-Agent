@@ -47,16 +47,26 @@ public class ChatModelService {
     }
 
     public String call(ChatRequestVm request) {
-        return call(request, new ArrayList<>());
+        return call(request, new ArrayList<>(), "");
     }
 
-    public String call(ChatRequestVm request, List<String> history) {
+    public String call(ChatRequestVm request, List<String> history, String summary) {
         StringBuilder sb = new StringBuilder();
         sb.append(Constant.SEARCH_TOOL_INSTRUCTION).append("\n");
         for (String h : history) {
             sb.append(h).append("\n");
+            if (!summary.isBlank()) {
+                sb.append("Conversation summary so far:").append("\n").append(summary).append("\n");
+            }
+            if (!history.isEmpty()) {
+                sb.append("Chat history:").append("\n");
+                for (String item : history) {
+                    sb.append(item).append("\n");
+                }
+                sb.append("\n");
+            }
         }
-        sb.append("User: ").append(request.getQuestion());
+
         String combinedPrompt = sb.toString();
 
         ChatModel model = dynamicModelService.getChatModel(request.getAgentId());
@@ -139,5 +149,22 @@ public class ChatModelService {
                 allCallbacks,
                 allowedToolNames
         );
+    }
+
+    public String createDynamicSummary(UUID agentId, List<String> messagesToSummarize) {
+        if (messagesToSummarize.isEmpty()) {
+            return "";
+        }
+        var joinedMessages = messagesToSummarize.stream().collect(Collectors.joining("\n"));
+
+        var promptText = Constant.SUMMARY_UPDATE_PROMPT.replace("{{latest_message}}", joinedMessages);
+
+        var prompt = new Prompt(promptText);
+        var chatModel = dynamicModelService.getChatModel(agentId);
+        var chatClient = ChatClient.builder(chatModel).build();
+
+        var response = chatClient.prompt(prompt).call();
+        var content = response.content();
+        return content != null ? content : "";
     }
 }

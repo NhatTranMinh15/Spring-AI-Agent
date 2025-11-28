@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,8 @@ public class ConversationService {
     private final ConversationRepository conversationRepo;
     private final ChatMessageRepository messageRepo;
     private final ChatMessageMediaRepository messageMediaRepo;
+
+    private static final int historyLimit = 5;
 
     @Autowired
     public ConversationService(ChatModelService chatModelService, ConversationRepository conversationRepo, ChatMessageRepository messageRepo, ChatMessageMediaRepository messageMediaRepo) {
@@ -89,23 +92,32 @@ public class ConversationService {
 
         var history = messageRepo.listMessageByConversationId(conversationId).stream().map((it) -> ChatMessageMapper.toHistoryFormat(it)).toList();
 
-        String answer = chatModelService.call(request, history);
-        // Only save reply if it has actual reply
-        if (answer != null) {
-            var answerMsg = new ChatMessageEntity(answer, conversation, Constant.ANSWER_TYPE);
-            var answerMsgEntity = messageRepo.save(answerMsg);
-            return new ChatResponseVm(
-                    conversationResponse,
-                    new ChatMessageResponseVm(
-                            answerMsgEntity.getId() != null ? answerMsgEntity.getId() : UUID.randomUUID(),
-                            answerMsgEntity.getContent(),
-                            answerMsgEntity.getCreatedAt(),
-                            Constant.ANSWER_TYPE,
-                            new ArrayList<>()
-                    )
-            );
+        var splitIndex = history.size() - historyLimit;
+
+        List<String> olderMessages = new ArrayList<>();
+        List<String> recentMessages;
+        if (splitIndex > 0) {
+//            var map = history.stream().collect(Collectors.partitioningBy((t) -> history.indexOf(t) < splitIndex));
+//            olderMessages = map.get(true);
+//            recentMessages = map.get(false);
+            recentMessages = new ArrayList<>();
+            for (int i = 0; i < history.size(); i++) {
+                if (i < splitIndex) {
+                    olderMessages.add(history.get(i));
+                } else {
+                    recentMessages.add(history.get(i));
+                }
+            }
+        } else {
+//            olderMessages = new ArrayList<>();
+            recentMessages = history;
         }
-        return new ChatResponseVm(conversationResponse, null);
+
+        var summary = chatModelService.createDynamicSummary(request.getAgentId(), olderMessages);
+
+        String answer = chatModelService.call(request, recentMessages, summary);
+
+        return buildChatResponse(answer, conversationResponse, conversation);
     }
 
     @Transactional
@@ -160,5 +172,29 @@ public class ConversationService {
                     }
                 }).filter((t) -> t != null).toList();
         messageMediaRepo.saveAll(mediaEntities);
+    }
+
+    private ChatResponseVm buildChatResponse(
+            String answer,
+            ConversationResponseVm conversationResponse,
+            ConversationEntity conversation
+    ) {
+        ChatMessageResponseVm cmrv = null;
+
+        // Only save reply if it has actual reply
+        if (answer != null) {
+            ChatMessageEntity cme = new ChatMessageEntity(answer, conversation, Constant.ANSWER_TYPE);
+            var answerEntity = messageRepo.save(cme);
+            UUID id = answerEntity.getId() != null ? answerEntity.getId() : UUID.randomUUID();
+            cmrv = new ChatMessageResponseVm(
+                    id,
+                    answerEntity.getContent(),
+                    answerEntity.getCreatedAt(),
+                    Constant.ANSWER_TYPE,
+                    new ArrayList()
+            );
+        }
+
+        return new ChatResponseVm(conversationResponse, cmrv);
     }
 }
