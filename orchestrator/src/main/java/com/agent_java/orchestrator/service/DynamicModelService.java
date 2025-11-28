@@ -60,6 +60,10 @@ public class DynamicModelService {
         return model.getSecond();
     }
 
+    public void invalidateCacheForAgent(UUID agentId) {
+        cache.put(agentId, createModels(agentId));
+    }
+
     private Pair<ChatModel, EmbeddingModel> createModels(UUID agentId) {
         var config = agentRepo.findById(agentId).orElseThrow();
         var chatModel = createChatModel(
