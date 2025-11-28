@@ -17,16 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 public class AgentToolsController {
 
-    private final AgentToolService toolAssignmentService;
+    private final AgentToolService agentToolService;
 
     @Autowired
-    public AgentToolsController(AgentToolService toolAssignmentService) {
-        this.toolAssignmentService = toolAssignmentService;
+    public AgentToolsController(AgentToolService agentToolService) {
+        this.agentToolService = agentToolService;
     }
 
     @GetMapping
     public ResponseEntity list(@PathVariable UUID agentId) {
-        var result = toolAssignmentService.getTools(agentId);
+        var result = agentToolService.getTools(agentId);
         return ResponseEntity.ok(result);
     }
 
@@ -35,7 +35,7 @@ public class AgentToolsController {
             @PathVariable UUID agentId,
             @PathVariable UUID toolId
     ) {
-        toolAssignmentService.assignTool(agentId, toolId);
+        agentToolService.assignTool(agentId, toolId);
         return ResponseEntity.ok().build();
     }
 
@@ -44,7 +44,7 @@ public class AgentToolsController {
             @PathVariable UUID agentId,
             @PathVariable UUID toolId
     ) {
-        toolAssignmentService.unassignTool(agentId, toolId);
+        agentToolService.unassignTool(agentId, toolId);
         return ResponseEntity.ok().build();
     }
 }

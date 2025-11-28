@@ -37,6 +37,9 @@ public class AgentTool extends BaseEntity {
     @Column(columnDefinition = "jsonb")
     Map<String, Object> config = null;
 
+    @Column(name = "active", nullable = false)
+    boolean active = true;
+
     public AgentTool(Agent agent, Tool tool) {
         this.agent = agent;
         this.tool = tool;

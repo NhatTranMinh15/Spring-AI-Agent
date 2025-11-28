@@ -1,5 +1,6 @@
 package com.agent_java.orchestrator.mapper;
 
+import com.agent_java.orchestrator.dto.AgentListResponseDto;
 import com.agent_java.orchestrator.dto.AgentRequestDto;
 import com.agent_java.orchestrator.dto.AgentResponseDto;
 import com.agent_java.orchestrator.entity.agent.Agent;
@@ -34,16 +35,37 @@ public class AgentMapper {
         return new AgentResponseDto(
                 agent.getId(),
                 agent.getName(),
-                agent.getModel(),
                 agent.getDescription(),
-                agent.getTemperature().doubleValue(),
-                agent.getMaxTokens(),
-                agent.getTopP().doubleValue(),
-                agent.getFrequencyPenalty().doubleValue(),
-                agent.getPresencePenalty().doubleValue(),
                 agent.isActive(),
                 agent.getProvider(),
+                agent.getBaseUrl(),
+                agent.getApiKey(),
+                agent.getChatCompletionsPath(),
+                agent.getModel(),
+                agent.getEmbeddingModel(),
+                agent.getDimension(),
+                agent.getEmbeddingsPath(),
+                agent.getTopP().doubleValue(),
+                agent.getTemperature().doubleValue(),
+                agent.getMaxTokens(),
+                agent.getFrequencyPenalty().doubleValue(),
+                agent.getPresencePenalty().doubleValue(),
                 agent.getSettings()
+        );
+    }
+
+    public static AgentListResponseDto toListResponse(Agent agent) {
+        var createdBy = agent.getCreatedBy();
+        var updatedBy = agent.getUpdatedBy();
+        return new AgentListResponseDto(
+                agent.getId(),
+                agent.getName(),
+                agent.getModel(),
+                updatedBy != null ? updatedBy.getName() : "Unknown",
+                agent.getUpdatedAt().toString(),
+                "",
+                createdBy != null ? createdBy.getName() : "Unknown",
+                agent.isActive() ? "Active" : "Inactive"
         );
     }
 

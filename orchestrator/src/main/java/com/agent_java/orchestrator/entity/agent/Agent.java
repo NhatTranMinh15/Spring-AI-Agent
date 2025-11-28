@@ -43,11 +43,32 @@ public class Agent extends SoftDeletableEntity {
     @Column(nullable = false, length = 100)
     String name;
 
-    @Column(nullable = false, length = 100)
-    String model;
-
     @Column(columnDefinition = "TEXT")
     String description;
+
+    @Column(length = 50)
+    String provider; // e.g. "openai", "anthropic", "local"
+
+    @Column(name = "base_url", length = 150, nullable = false)
+    String baseUrl;
+
+    @Column(name = "api_key", length = 200, nullable = false)
+    String apiKey;
+
+    @Column(name = "chat_completions_path", length = 50, nullable = false)
+    String chatCompletionsPath;
+
+    @Column(name = "embeddings_path", length = 50, nullable = false)
+    String embeddingsPath;
+
+    @Column(name = "embedding_model", length = 50, nullable = false)
+    String embeddingModel;
+
+    @Column(nullable = false)
+    int dimension = Constant.CHATGPT_DIMENSION;
+
+    @Column(nullable = false, length = 100)
+    String model;
 
     /**
      * Controls randomness of model output.
@@ -84,30 +105,9 @@ public class Agent extends SoftDeletableEntity {
     @Column(name = "presence_penalty", nullable = false, precision = 3, scale = 2)
     BigDecimal presencePenalty = DEFAULT_PRESENCE_PENALTY;
 
-    @Column(length = 50)
-    String provider = null;
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     Map<String, Object> settings;
-
-    @Column(name = "base_url", length = 150, nullable = false)
-    String baseUrl;
-
-    @Column(name = "api_key", length = 200, nullable = false)
-    String apiKey;
-
-    @Column(name = "chat_completions_path", length = 50, nullable = false)
-    String chatCompletionsPath;
-
-    @Column(name = "embeddings_path", length = 50, nullable = false)
-    String embeddingsPath;
-
-    @Column(name = "embedding_model", length = 50, nullable = false)
-    String embeddingModel;
-
-    @Column(nullable = false)
-    int dimension = Constant.CHATGPT_DIMENSION;
 
     @Version
     @Column(nullable = false)

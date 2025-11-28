@@ -1,5 +1,6 @@
 package com.agent_java.orchestrator.service;
 
+import com.agent_java.orchestrator.dto.AgentKnowledgeListResponseDto;
 import com.agent_java.orchestrator.dto.AgentKnowledgeRequestDto;
 import com.agent_java.orchestrator.dto.AgentKnowledgeResponseDto;
 import com.agent_java.orchestrator.mapper.AgentKnowledgeMapper;
@@ -25,8 +26,8 @@ public class AgentKnowledgeService {
     }
 
     @Transactional(readOnly = true)
-    public List<AgentKnowledgeResponseDto> getByAgent(UUID agentId) {
-        return repo.findAllByAgentIdAndActiveTrue(agentId).stream().map(AgentKnowledgeMapper::toResponse).toList();
+    public List<AgentKnowledgeListResponseDto> getByAgent(UUID agentId) {
+        return repo.findAllByAgentId(agentId).stream().map(AgentKnowledgeMapper::toListResponse).toList();
     }
 
     @Transactional(readOnly = true)
@@ -56,7 +57,6 @@ public class AgentKnowledgeService {
         existing.setSourceType(request.getSourceType());
         existing.setSourceUri(request.getSourceUri());
         existing.setMetadata(request.getMetadata());
-        existing.setEmbeddingModel(request.getEmbeddingModel());
         existing.setActive(request.getActive());
         return AgentKnowledgeMapper.toResponse(repo.save(existing));
     }

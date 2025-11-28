@@ -1,6 +1,6 @@
 package com.agent_java.orchestrator.dto;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -18,8 +18,8 @@ public class AgentKnowledgeResponseDto {
     String sourceType;
     String sourceUri;
     Map<String, Object> metadata;
-    String embeddingModel;
     boolean active;
-    OffsetDateTime createdAt;
-    OffsetDateTime updatedAt;
+    Instant createdAt;
+    Instant updatedAt;
+
 }

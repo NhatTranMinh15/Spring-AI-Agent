@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AgentKnowledgeRepository extends JpaRepository<AgentKnowledge, UUID> {
 
+    public List<AgentKnowledge> findAllByAgentId(UUID agentId);
+
     public List<AgentKnowledge> findAllByAgentIdAndActiveTrue(UUID agentId);
 
     public Optional<AgentKnowledge> findByIdAndAgentId(UUID knowledgeId, UUID agentId);

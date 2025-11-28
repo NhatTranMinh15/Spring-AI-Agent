@@ -35,7 +35,7 @@ public class AgentKnowledgeController {
 
     @GetMapping
     public ResponseEntity list(@PathVariable UUID agentId) {
-        List<AgentKnowledgeResponseDto> result = agentKnowledgeService.getByAgent(agentId);
+        var result = agentKnowledgeService.getByAgent(agentId);
         return ResponseEntity.ok(result);
     }
 

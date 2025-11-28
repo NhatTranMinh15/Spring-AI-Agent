@@ -16,6 +16,5 @@ public class AgentKnowledgeRequestDto {
     String sourceType = null;
     String sourceUri = null;
     Map<String, Object> metadata = null;
-    String embeddingModel = null;
     Boolean active = true;
 }

@@ -8,13 +8,14 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AgentToolResponseDto {
+public class AgentListResponseDto {
 
-    UUID toolId;
-    String toolName;
-    String toolType;
-    String availableTo;
+    UUID id;
+    String name;
+    String model;
     String lastModifiedBy;
     String lastModifiedWhen;
-    boolean enabled;
+    String lastPublishedWhen;
+    String owner;
+    String status;
 }

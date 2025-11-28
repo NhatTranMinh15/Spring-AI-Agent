@@ -1,11 +1,9 @@
 package com.agent_java.orchestrator.repository;
 
-import com.agent_java.orchestrator.entity.UserEntity;
-import java.util.Optional;
+import com.agent_java.orchestrator.entity.User;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<UserEntity, UUID> {
+public interface UserRepository extends JpaRepository<User, UUID> {
 
-    Optional<UserEntity> findByUsername(String username);
 }

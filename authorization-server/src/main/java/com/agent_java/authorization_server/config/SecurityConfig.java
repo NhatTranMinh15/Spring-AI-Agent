@@ -1,59 +1,184 @@
 package com.agent_java.authorization_server.config;
 
 import com.agent_java.authorization_server.repository.UserRepository;
+import com.agent_java.authorization_server.service.CustomUserDetailsService;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Autowired
     private UserRepository userRepository;
 
-    public static final int SECURITY_FILTER_ORDER = 3;
+    @Value("${jwt.issuer}")
+    private String issuer;
 
     @Bean
-    @Order(SECURITY_FILTER_ORDER) // Run this after the AS chain
+    @Order(1) // Run this filter chain first
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http, AuthenticationProvider customAuthProvider) throws Exception {
+        var authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
+        var endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
+        // attach to SAS endpoints
+        http.securityMatcher(endpointsMatcher)
+                .authorizeHttpRequests(auth
+                        // Allow discovery endpoints
+                        -> auth.requestMatchers(
+                        "/.well-known/oauth-authorization-server",
+                        "/.well-known/openid-configuration" // only if OIDC enabled
+                ).permitAll()
+                        // Anything else requires authentication
+                        .anyRequest().authenticated()
+                );
+
+        // Disable CSRF for the AS endpoints (token, JWKs, etc.)
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher));
+
+        // New DSL instead of deprecated .apply()
+        http.with(authorizationServerConfigurer, Customizer.withDefaults());
+
+        http.exceptionHandling((exceptions) -> {
+            exceptions.defaultAuthenticationEntryPointFor(new BearerTokenAuthenticationEntryPoint(), (request) -> "/userinfo".equals(request.getRequestURL().toString()));
+            exceptions.defaultAuthenticationEntryPointFor(new LoginUrlAuthenticationEntryPoint("/login"), (request) -> true);
+        });
+        http.formLogin(Customizer.withDefaults());
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc((oidc) -> { // Enable OpenID Connect 1.0
+            oidc.clientRegistrationEndpoint(Customizer.withDefaults());
+        });
+        http.oauth2ResourceServer((t) -> t.jwt(Customizer.withDefaults()));
+        http.authenticationProvider(customAuthProvider);
+        return http.build();
+    }
+
+    @Bean
+    @Order(2) // Run this after the AS chain
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
+                // match everything ELSE, excluding SAS endpoints
                 .securityMatcher("/**")
                 .authorizeHttpRequests(auth
                         -> auth.anyRequest().authenticated()
                 )
-                .formLogin(Customizer.withDefaults())
+                .formLogin(Customizer.withDefaults()) // enables default login page
                 .build();
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        return (String username) -> {
-            var user = userRepository
-                    .findUserByUserName(username) // to avoid using FetchType.EAGER in entities
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder().issuer(issuer).build();
+    }
 
-            UserDetails u = User
-                    .withUsername(user.getUsername())
-                    .password(user.getPassword()) // must already be encoded with BCrypt
-                    .roles(user.getUserRoles().stream().map((t) -> t.getRole().getName().replace("ROLE_", "")).toArray(String[]::new))
-                    .disabled(!user.isEnabled())
-                    .build();
-            return u;
+    @Bean
+    public JWKSource<SecurityContext> jwkSource() throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+        var ks = KeyStore.getInstance("PKCS12");
+        var resource = new ClassPathResource("authserver.p12");
+        ks.load(resource.getInputStream(), "changeit".toCharArray());
+        var key = (RSAPrivateKey) ks.getKey("authserver", "changeit".toCharArray());
+        var cert = (java.security.cert.X509Certificate) ks.getCertificate("authserver");
+        var publicKey = (RSAPublicKey) cert.getPublicKey();
+        var rsaKey = new RSAKey.Builder(publicKey)
+                .privateKey(key)
+                .keyID("authserver-key") // stable key id
+                .build();
+        return new ImmutableJWKSet(new JWKSet(rsaKey));
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+    }
+
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer() {
+        return (JwtEncodingContext context) -> {
+            Authentication principal = context.getPrincipal();
+            var p = principal.getPrincipal();
+            UUID userId = switch (p) {
+                case CustomUserDetails c ->
+                    c.userId;
+                default ->
+                    throw new IllegalArgumentException("Cannot determine userId");
+            };
+            Collection<? extends GrantedAuthority> authorities = principal.getAuthorities();
+
+            // Extract roles from authorities (remove ROLE_ prefix for cleaner claims)
+            var roles = authorities.stream().map((authority) -> authority.getAuthority().replace("ROLE_", "")).collect(Collectors.toCollection(ArrayList::new));
+
+            // Add roles to both access tokens and ID tokens
+            if (context.getTokenType().equals(OAuth2TokenType.ACCESS_TOKEN)) {
+                context.getClaims()
+                        .subject(userId.toString())
+                        .claim("user_id", userId.toString())
+                        .claim("roles", roles)
+                        .claim("authorities", authorities.stream().map((t) -> t.getAuthority()).collect(Collectors.toList()));
+            }
+
+            // For ID tokens (OIDC), include roles in the standard way
+            if (context.getTokenType().getValue().equals(OidcParameterNames.ID_TOKEN)) {
+                context.getClaims().subject(userId.toString())
+                        .claim("user_id", userId.toString())
+                        .claim("roles", roles);
+            }
         };
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return new CustomUserDetailsService(userRepository);
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationProvider customAuthProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        var provider = new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
     }
 }

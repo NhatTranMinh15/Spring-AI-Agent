@@ -1,6 +1,6 @@
 package com.agent_java.orchestrator.viewmodel;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public interface ConversationResponseVm {
@@ -9,5 +9,5 @@ public interface ConversationResponseVm {
 
     String getTitle();
 
-    OffsetDateTime getCreatedAt();
+    Instant getCreatedAt();
 }

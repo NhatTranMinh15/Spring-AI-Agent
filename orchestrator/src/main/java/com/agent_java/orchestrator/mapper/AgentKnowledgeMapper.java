@@ -1,10 +1,10 @@
 package com.agent_java.orchestrator.mapper;
 
+import com.agent_java.orchestrator.dto.AgentKnowledgeListResponseDto;
 import com.agent_java.orchestrator.dto.AgentKnowledgeRequestDto;
 import com.agent_java.orchestrator.dto.AgentKnowledgeResponseDto;
 import com.agent_java.orchestrator.entity.agent.Agent;
 import com.agent_java.orchestrator.entity.agent.knowledge.AgentKnowledge;
-import java.time.OffsetDateTime;
 
 public class AgentKnowledgeMapper {
 
@@ -14,8 +14,7 @@ public class AgentKnowledgeMapper {
                 request.getName(),
                 request.getSourceType(),
                 request.getSourceUri(),
-                request.getMetadata(),
-                request.getEmbeddingModel()
+                request.getMetadata()
         );
         return agentKnowledge;
     }
@@ -28,10 +27,23 @@ public class AgentKnowledgeMapper {
                 entity.getSourceType(),
                 entity.getSourceUri(),
                 entity.getMetadata(),
-                entity.getEmbeddingModel(),
                 entity.isActive(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
+        );
+    }
+
+    public static AgentKnowledgeListResponseDto toListResponse(AgentKnowledge entity) {
+        var updatedBy = entity.getUpdatedBy();
+        return new AgentKnowledgeListResponseDto(
+                entity.getId(),
+                entity.getName(),
+                entity.getSourceType(),
+                entity.getAgent().getName(),
+                "",
+                updatedBy != null ? updatedBy.getName() : "Unknown",
+                entity.getUpdatedAt().toString(),
+                "Ready"
         );
     }
 }

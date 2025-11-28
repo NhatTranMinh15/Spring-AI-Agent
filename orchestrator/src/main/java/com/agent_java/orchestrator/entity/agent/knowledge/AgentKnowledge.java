@@ -41,9 +41,6 @@ public class AgentKnowledge extends SoftDeletableEntity {
     @Column(columnDefinition = "jsonb")
     Map<String, Object> metadata = null;
 
-    @Column(name = "embedding_model", length = 100)
-    String embeddingModel = null;
-
     public AgentKnowledge(String name) {
         this.name = name;
     }

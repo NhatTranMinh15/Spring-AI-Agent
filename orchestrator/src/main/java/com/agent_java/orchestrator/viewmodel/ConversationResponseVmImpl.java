@@ -1,9 +1,9 @@
 package com.agent_java.orchestrator.viewmodel;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
-public record ConversationResponseVmImpl(UUID id, String title, OffsetDateTime createdAt) implements ConversationResponseVm {
+public record ConversationResponseVmImpl(UUID id, String title, Instant createdAt) implements ConversationResponseVm {
 
     @Override
     public UUID getId() {
@@ -16,7 +16,7 @@ public record ConversationResponseVmImpl(UUID id, String title, OffsetDateTime c
     }
 
     @Override
-    public OffsetDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 

@@ -1,5 +1,6 @@
 package com.agent_java.orchestrator.controller;
 
+import com.agent_java.orchestrator.dto.AgentListResponseDto;
 import com.agent_java.orchestrator.dto.AgentRequestDto;
 import com.agent_java.orchestrator.dto.AgentResponseDto;
 import com.agent_java.orchestrator.service.AgentService;
@@ -30,6 +31,13 @@ public class AgentController {
     AgentService service;
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "List all agents")
+    public List<AgentListResponseDto> getAll() {
+        return service.getAll();
+    }
+
+    @GetMapping("/active")
     @PreAuthorize("hasAuthority('SCOPE_agents.read') or hasRole('ROLE_ADMIN') or hasRole('ROLE_CLIENT')")
     @Operation(summary = "List all active agents")
     public List<AgentResponseDto> getAllActive() {
