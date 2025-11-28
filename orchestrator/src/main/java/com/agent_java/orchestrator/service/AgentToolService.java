@@ -14,14 +14,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class AgentToolAssignmentService {
+public class AgentToolService {
 
     private final AgentRepository agentRepository;
     private final ToolRepository toolRepository;
     private final AgentToolRepository agentToolRepository;
 
     @Autowired
-    public AgentToolAssignmentService(AgentRepository agentRepository, ToolRepository toolRepository, AgentToolRepository agentToolRepository) {
+    public AgentToolService(AgentRepository agentRepository, ToolRepository toolRepository, AgentToolRepository agentToolRepository) {
         this.agentRepository = agentRepository;
         this.toolRepository = toolRepository;
         this.agentToolRepository = agentToolRepository;

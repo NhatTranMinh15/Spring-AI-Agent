@@ -53,4 +53,21 @@ public class AgentRequestDto {
 
     Map<String, Object> settings;
 
+    @NotBlank(message = "Base url must not be blank")
+    String baseUrl;
+
+    @NotBlank(message = "Api key must not be blank")
+    String apiKey;
+
+    @NotBlank(message = "Chat completions path must not be blank")
+    String chatCompletionsPath;
+
+    @NotBlank(message = "Embeddings path must not be blank")
+    String embeddingsPath;
+
+    @NotBlank(message = "Embedding model must not be blank")
+    String embeddingModel;
+
+    @Min(value = Agent.MIN_DIMENSION, message = "Min embedding must be at least {value}")
+    int dimension;
 }

@@ -2,6 +2,7 @@ package com.agent_java.orchestrator.entity.agent;
 
 import com.agent_java.orchestrator.entity.agent.knowledge.AgentKnowledge;
 import com.agent_java.orchestrator.entity.base.SoftDeletableEntity;
+import com.agent_java.orchestrator.utils.Constant;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,6 +38,7 @@ public class Agent extends SoftDeletableEntity {
     public static final String MAX_TOP_P = "1.0";
     public static final String MIN_PENALTY = "-2.0";
     public static final String MAX_PENALTY = "2.0";
+    public static final long MIN_DIMENSION = 64;
 
     @Column(nullable = false, length = 100)
     String name;
@@ -89,6 +91,24 @@ public class Agent extends SoftDeletableEntity {
     @Column(columnDefinition = "jsonb")
     Map<String, Object> settings;
 
+    @Column(name = "base_url", length = 150, nullable = false)
+    String baseUrl;
+
+    @Column(name = "api_key", length = 200, nullable = false)
+    String apiKey;
+
+    @Column(name = "chat_completions_path", length = 50, nullable = false)
+    String chatCompletionsPath;
+
+    @Column(name = "embeddings_path", length = 50, nullable = false)
+    String embeddingsPath;
+
+    @Column(name = "embedding_model", length = 50, nullable = false)
+    String embeddingModel;
+
+    @Column(nullable = false)
+    int dimension = Constant.CHATGPT_DIMENSION;
+
     @Version
     @Column(nullable = false)
     int version = 0;
@@ -103,8 +123,7 @@ public class Agent extends SoftDeletableEntity {
     }
 
     public Agent(String name, String model, String description, BigDecimal temperature, int maxTokens, BigDecimal topP, BigDecimal frequencyPenalty, BigDecimal presencePenalty, String provider, Map<String, Object> settings) {
-        this.name = name;
-        this.model = model;
+        this(name, model);
         this.description = description;
         this.temperature = temperature;
         this.maxTokens = maxTokens;
@@ -118,6 +137,16 @@ public class Agent extends SoftDeletableEntity {
     public Agent(String name, String model) {
         this.name = name;
         this.model = model;
+    }
+
+    public Agent(String name, String model, String description, BigDecimal temperature, int maxTokens, BigDecimal topP, BigDecimal frequencyPenalty, BigDecimal presencePenalty, String provider, Map<String, Object> settings, String baseUrl, String apiKey, String chatCompletionsPath, String embeddingsPath, String embeddingModel, int dimension) {
+        this(name, model, description, temperature, maxTokens, topP, frequencyPenalty, presencePenalty, provider, settings);
+        this.baseUrl = baseUrl;
+        this.apiKey = apiKey;
+        this.chatCompletionsPath = chatCompletionsPath;
+        this.embeddingsPath = embeddingsPath;
+        this.embeddingModel = embeddingModel;
+        this.dimension = dimension;
     }
 
     public void setTemperature(double temperature) {

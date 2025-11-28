@@ -1,6 +1,6 @@
 package com.agent_java.orchestrator.controller;
 
-import com.agent_java.orchestrator.service.AgentToolAssignmentService;
+import com.agent_java.orchestrator.service.AgentToolService;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 public class AgentToolsController {
 
-    private final AgentToolAssignmentService toolAssignmentService;
+    private final AgentToolService toolAssignmentService;
 
     @Autowired
-    public AgentToolsController(AgentToolAssignmentService toolAssignmentService) {
+    public AgentToolsController(AgentToolService toolAssignmentService) {
         this.toolAssignmentService = toolAssignmentService;
     }
 

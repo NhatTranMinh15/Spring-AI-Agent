@@ -21,7 +21,7 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class KnowledgeChunk extends BaseEntity{
+public class KnowledgeChunk extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "knowledge_id", nullable = false)
@@ -37,15 +37,20 @@ public class KnowledgeChunk extends BaseEntity{
     @Column(columnDefinition = "jsonb")
     Map<String, Object> metadata = null;
 
-    @Column(name = "embedding")
+    @Column(name = "embedding_768")
     @JdbcTypeCode(SqlTypes.VECTOR)
-    float[] embedding;
+    float[] embedding768;
 
-    public KnowledgeChunk(AgentKnowledge knowledge, Integer chunkOrder, String content, Map<String, Object> metadata, float[] embedding) {
-        this.knowledge =knowledge;
+    @Column(name = "embedding_1536")
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    float[] embedding1536;
+
+    public KnowledgeChunk(AgentKnowledge knowledge, Integer chunkOrder, String content, Map<String, Object> metadata, float[] embedding768, float[] embedding1536) {
+        this.knowledge = knowledge;
         this.chunkOrder = chunkOrder;
         this.content = content;
         this.metadata = metadata;
-        this.embedding = embedding;
+        this.embedding768 = embedding768;
+        this.embedding1536 = embedding1536;
     }
 }

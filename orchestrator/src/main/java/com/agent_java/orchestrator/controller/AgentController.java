@@ -30,7 +30,7 @@ public class AgentController {
     AgentService service;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('SCOPE_agents.read') or hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_agents.read') or hasRole('ROLE_ADMIN') or hasRole('ROLE_CLIENT')")
     @Operation(summary = "List all active agents")
     public List<AgentResponseDto> getAllActive() {
         return service.getAllActive();

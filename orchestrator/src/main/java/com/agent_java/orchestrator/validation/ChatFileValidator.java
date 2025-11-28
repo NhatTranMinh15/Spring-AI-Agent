@@ -9,10 +9,10 @@ public class ChatFileValidator implements ConstraintValidator<ValidChatFile, Cha
 
     @Override
     public boolean isValid(ChatRequestVm value, ConstraintValidatorContext context) {
-        if (value == null || value.files()== null) {
+        if (value == null || value.getFiles() == null) {
             return true;
         }
-        var files = value.files();
+        var files = value.getFiles();
         boolean isValid = true;
         if (files == null) {
             return false;

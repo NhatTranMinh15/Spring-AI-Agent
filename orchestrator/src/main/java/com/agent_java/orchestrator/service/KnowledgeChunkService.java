@@ -4,6 +4,7 @@ import com.agent_java.orchestrator.dto.KnowledgeChunkResponseDto;
 import com.agent_java.orchestrator.entity.agent.knowledge.KnowledgeChunk;
 import com.agent_java.orchestrator.repository.AgentKnowledgeRepository;
 import com.agent_java.orchestrator.repository.KnowledgeChunkRepository;
+import com.agent_java.orchestrator.utils.Constant;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,8 +13,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +22,15 @@ public class KnowledgeChunkService {
 
     private final KnowledgeChunkRepository chunkRepo;
     private final AgentKnowledgeRepository knowledgeRepo;
-    private final VectorStore vectorStore;
-    private final EmbeddingModel embeddingModel;
+    private final VectorStoreService vectorStoreService;
+    private final DynamicModelService dynamicModelService;
 
     @Autowired
-    public KnowledgeChunkService(KnowledgeChunkRepository chunkRepo, AgentKnowledgeRepository knowledgeRepo, VectorStore vectorStore, EmbeddingModel embeddingModel) {
+    public KnowledgeChunkService(KnowledgeChunkRepository chunkRepo, AgentKnowledgeRepository knowledgeRepo, VectorStoreService vectorStoreService, DynamicModelService dynamicModelService) {
         this.chunkRepo = chunkRepo;
         this.knowledgeRepo = knowledgeRepo;
-        this.vectorStore = vectorStore;
-        this.embeddingModel = embeddingModel;
+        this.vectorStoreService = vectorStoreService;
+        this.dynamicModelService = dynamicModelService;
     }
 
     @Transactional
@@ -40,11 +39,18 @@ public class KnowledgeChunkService {
                 .orElseThrow(() -> new EntityNotFoundException("Knowledge " + knowledgeId + " not found for agent " + agentId));
 
         var order = chunkOrder != null ? chunkOrder : getNextChunkOrderForKnowledge(agentId, knowledgeId);
-        var embedding = embeddingModel.embed(content);
+        var embedding = dynamicModelService.getEmbeddingModel(agentId).embed(content);
 
-        var chunk = new KnowledgeChunk(knowledge, order, content, metadata, embedding);
+        var chunk = new KnowledgeChunk(
+                knowledge,
+                order,
+                content,
+                metadata,
+                embedding.length == Constant.GEMINI_DIMENSION ? embedding : null,
+                embedding.length == Constant.CHATGPT_DIMENSION ? embedding : null);
+
         var savedChunk = chunkRepo.save(chunk);
-        vectorStore.add(List.of(buildDocument(savedChunk)));
+        vectorStoreService.getVectorStore(agentId).add(List.of(buildDocument(savedChunk)));
         return KnowledgeChunkResponseDto.from(savedChunk);
     }
 
@@ -61,11 +67,20 @@ public class KnowledgeChunkService {
             throw new EntityNotFoundException("Chunk $chunkId does not belong to agent $agentId");
         }
 
+        var embedding = dynamicModelService.getEmbeddingModel(agentId).embed(newContent);
         chunk.setContent(newContent);
         chunk.setMetadata(newMetadata);
-        chunk.setEmbedding(embeddingModel.embed(newContent));
-
-        vectorStore.add(List.of(buildDocument(chunk)));
+        switch (embedding.length) {
+            case Constant.GEMINI_DIMENSION -> {
+                chunk.setEmbedding768(embedding);
+            }
+            case Constant.CHATGPT_DIMENSION -> {
+                chunk.setEmbedding1536(embedding);
+            }
+            default ->
+                throw new IllegalArgumentException("Unsupported embedding dimension: " + embedding.length);
+        }
+        vectorStoreService.getVectorStore(agentId).add(List.of(buildDocument(chunk)));
         return KnowledgeChunkResponseDto.from(chunkRepo.save(chunk));
     }
 
@@ -96,7 +111,7 @@ public class KnowledgeChunkService {
             throw new EntityNotFoundException("Knowledge " + knowledgeId + " not found for agent " + agentId);
         }
 
-        List<Document> results = vectorStore.similaritySearch(query);
+        List<Document> results = vectorStoreService.getVectorStore(agentId).similaritySearch(query);
 
         if (results.isEmpty()) {
             return new ArrayList<>();

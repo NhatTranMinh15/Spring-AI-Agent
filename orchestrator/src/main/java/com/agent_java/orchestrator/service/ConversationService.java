@@ -43,8 +43,8 @@ public class ConversationService {
 
     @Transactional
     public ChatResponseVm createConversation(ChatRequestVm chatReq, String username) {
-        if (chatReq.conversationId() != null) {
-            return addMessage(chatReq.conversationId(), chatReq);
+        if (chatReq.getConversationId() != null) {
+            return addMessage(chatReq.getConversationId(), chatReq);
         }
         var conversationId = this.createNewConversation(chatReq, username);
         return addMessage(conversationId, chatReq);
@@ -65,9 +65,9 @@ public class ConversationService {
             ChatRequestVm chatReq,
             String username
     ) {
-        var titleSummarize = chatModelService.createSummarize(chatReq.question());
+        var titleSummarize = chatModelService.createSummarize(chatReq.getAgentId(), chatReq.getQuestion());
         var conversation = new ConversationEntity(
-                titleSummarize != null ? titleSummarize : chatReq.question(),
+                titleSummarize != null ? titleSummarize : chatReq.getQuestion(),
                 username
         );
         UUID conversationId = conversationRepo.save(conversation).getId();
@@ -82,7 +82,7 @@ public class ConversationService {
         var conversation = conversationRepo.findById(conversationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found: " + conversationId));
         // Save question into DB first
-        var questionMsg = new ChatMessageEntity(request.question(), conversation, Constant.QUESTION_TYPE);
+        var questionMsg = new ChatMessageEntity(request.getQuestion(), conversation, Constant.QUESTION_TYPE);
         var questionEntity = this.messageRepo.save(questionMsg);
         saveMessageMedia(request, questionEntity);
         var conversationResponse = new ConversationResponseVmImpl(conversationId, conversation.getTitle(), conversation.getCreatedAt());
@@ -132,7 +132,7 @@ public class ConversationService {
 
         conversation.setTitle(newTitle.trim());
         var updatedConversation = this.conversationRepo.save(conversation);
-        
+
         return new ConversationResponseVmImpl(
                 updatedConversation.getId(),
                 updatedConversation.getTitle(),
@@ -141,7 +141,7 @@ public class ConversationService {
     }
 
     private void saveMessageMedia(ChatRequestVm chatReq, ChatMessageEntity questionEntity) {
-        var files = chatReq.files();
+        var files = chatReq.getFiles();
         if (files == null || files.isEmpty()) {
             return;
         }

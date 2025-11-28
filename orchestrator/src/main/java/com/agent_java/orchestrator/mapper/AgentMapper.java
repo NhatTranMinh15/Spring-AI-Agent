@@ -18,7 +18,13 @@ public class AgentMapper {
                 toBigDecimalOrDefault(request.getFrequencyPenalty(), Agent.DEFAULT_FREQUENCY_PENALTY),
                 toBigDecimalOrDefault(request.getPresencePenalty(), Agent.DEFAULT_PRESENCE_PENALTY),
                 request.getProvider(),
-                request.getSettings()
+                request.getSettings(),
+                request.getBaseUrl(),
+                request.getApiKey(),
+                request.getChatCompletionsPath(),
+                request.getEmbeddingsPath(),
+                request.getEmbeddingModel(),
+                request.getDimension()
         );
         agent.setActive(request.isActive());
         return agent;
@@ -41,6 +47,10 @@ public class AgentMapper {
         );
     }
 
+    /**
+     * Converts a nullable Double to BigDecimal safely,
+     * or falls back to a provided default BigDecimal.
+     */
     private static BigDecimal toBigDecimalOrDefault(Double d, BigDecimal def) {
         return d != null ? new BigDecimal(d) : def;
     }
